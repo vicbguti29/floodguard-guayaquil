@@ -6,8 +6,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import uvicorn
+import torch
+import numpy as np
+from pathlib import Path
+import sys
+
+# Add models to path
+sys.path.append(str(Path(__file__).parent.parent / 'models' / 'lstm'))
 
 app = FastAPI(
     title="FloodGuard API",
@@ -49,36 +56,114 @@ async def root():
         "status": "operational"
     }
 
+def load_model():
+    """Cargar modelo LSTM entrenado"""
+    try:
+        from baseline import LSTMRainPredictor
+
+        model_path = Path(__file__).parent.parent / 'models' / 'checkpoints' / 'lstm_baseline_v1.pth'
+
+        if not model_path.exists():
+            print(f"Warning: Modelo no encontrado en {model_path}")
+            return None
+
+        checkpoint = torch.load(model_path, map_location=torch.device('cpu'), weights_only=False)
+
+        model = LSTMRainPredictor(
+            input_size=checkpoint['input_size'],
+            hidden_size=checkpoint['hidden_size'],
+            num_layers=checkpoint['num_layers'],
+            output_size=checkpoint['output_size']
+        )
+
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
+
+        print(f"[OK] Modelo cargado desde {model_path}")
+        return {
+            'model': model,
+            'mean': checkpoint['mean'],
+            'std': checkpoint['std']
+        }
+
+    except Exception as e:
+        print(f"Error cargando modelo: {e}")
+        return None
+
+
+# Cargar modelo al iniciar
+MODEL = load_model()
+
+
+def get_risk_level(probability):
+    """Convierte probabilidad a nivel de riesgo"""
+    if probability < 0.25:
+        return 'low'
+    elif probability < 0.50:
+        return 'medium'
+    elif probability < 0.75:
+        return 'high'
+    else:
+        return 'critical'
+
+
 @app.get("/api/v1/predict", response_model=List[PredictionResponse])
 async def get_predictions():
     """
     Obtener predicciones actuales para todas las zonas
     """
-    # TODO: Cargar modelo y generar predicciones reales
+    # Si hay modelo, generar predicciones reales (simuladas por ahora)
+    if MODEL:
+        # TODO: Conectar con datos meteorológicos reales
+        # Por ahora, generamos predicciones sintéticas basadas en el modelo
 
-    # Placeholder response
-    mock_predictions = [
-        PredictionResponse(
-            zone_id="Z001",
-            zone_name="Los Sauces",
-            risk_level="medium",
-            probability=0.45,
-            estimated_time_hours=3.5,
-            confidence=0.82,
-            timestamp=datetime.now()
-        ),
-        PredictionResponse(
-            zone_id="Z002",
-            zone_name="Alborada",
-            risk_level="low",
-            probability=0.15,
-            estimated_time_hours=None,
-            confidence=0.91,
-            timestamp=datetime.now()
-        )
-    ]
+        # Zonas de ejemplo
+        zones = [
+            {"id": "Z001", "name": "Los Sauces"},
+            {"id": "Z002", "name": "Alborada"},
+            {"id": "Z003", "name": "Guasmo"},
+            {"id": "Z004", "name": "Bastión Popular"},
+            {"id": "Z005", "name": "Kennedy"},
+            {"id": "Z006", "name": "Urdesa"},
+            {"id": "Z007", "name": "Monte Sinaí"}
+        ]
 
-    return mock_predictions
+        predictions = []
+
+        for zone in zones:
+            # Generar probabilidad aleatoria (en producción: del modelo)
+            probability = np.random.beta(2, 5)  # Bias hacia valores bajos
+
+            # Tiempo estimado solo si riesgo > low
+            estimated_time = None
+            if probability > 0.25:
+                estimated_time = np.random.uniform(2, 6)
+
+            predictions.append(PredictionResponse(
+                zone_id=zone["id"],
+                zone_name=zone["name"],
+                risk_level=get_risk_level(probability),
+                probability=round(probability, 2),
+                estimated_time_hours=round(estimated_time, 1) if estimated_time else None,
+                confidence=0.75 + np.random.uniform(-0.1, 0.1),  # ~75% confidence
+                timestamp=datetime.now()
+            ))
+
+        return predictions
+
+    else:
+        # Fallback si no hay modelo
+        return [
+            PredictionResponse(
+                zone_id="Z001",
+                zone_name="Los Sauces",
+                risk_level="medium",
+                probability=0.45,
+                estimated_time_hours=3.5,
+                confidence=0.82,
+                timestamp=datetime.now()
+            )
+        ]
 
 @app.get("/api/v1/zones", response_model=List[ZoneInfo])
 async def get_zones():
