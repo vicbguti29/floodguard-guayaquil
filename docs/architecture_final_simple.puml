@@ -1,0 +1,74 @@
+@startuml FloodGuard_Simple
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+
+title **FloodGuard - Arquitectura del Sistema**\nPredicción de Inundaciones con Deep Learning
+
+' COMPONENTES PRINCIPALES SIN ANIDAMIENTO
+
+[**INPUT**\nSeries Temporales\n(24h precipitación,\ntemperatura, humedad, viento)] as INPUT #E3F2FD
+[**INPUT**\nDatos Geoespaciales\n(Topografía, alcantarillado,\nríos, 840 zonas)] as GEO #E3F2FD
+
+[**TRANSFORMER**\nAnálisis Temporal\n\nMulti-Head Attention\nEncoder Stack\n\nPredicción 6h futuras] as TRANS #F3E5F5
+
+[**GRAPH NEURAL\nNETWORK**\nPropagación Espacial\n\nGraph Convolution\nMessage Passing\n\nRiesgo por zona] as GNN #E8F5E9
+
+[**FUSION LAYER**\nAtención Cruzada\n\nCombina predicciones\ntemporal + espacial] as FUSION #FFE0B2
+
+[**OUTPUT**\nPredicciones Finales\n\nProbabilidad por zona\nNivel de riesgo\nTiempo estimado\nConfianza del modelo] as OUTPUT #FFEBEE
+
+' FLUJO DE DATOS
+INPUT --> TRANS : "Serie\ntemporal"
+GEO --> GNN : "Grafo\nespacial"
+TRANS --> FUSION : "Cuándo\nlloverá"
+GNN --> FUSION : "Dónde se\ninundará"
+FUSION --> OUTPUT : "Alertas\npor zona"
+
+' NOTAS EXPLICATIVAS
+note right of TRANS
+  **Transformer Temporal:**
+
+  Captura patrones complejos
+  en series de lluvia usando
+  mecanismo de atención
+
+  Predice próximas 6 horas
+end note
+
+note right of GNN
+  **Graph Neural Network:**
+
+  Modela propagación de agua
+  entre zonas conectadas
+
+  Considera topografía,
+  alcantarillado, flujo
+end note
+
+note bottom of OUTPUT
+  **Ejemplo de Predicción:**
+
+  • Los Sauces: 12% (Bajo)
+  • Alborada: 45% (Medio)
+  • Guasmo: 78% (Alto) - 3.5h
+  • Bastión: 92% (Crítico) - 2h
+end note
+
+legend top right
+  **Colores por Función:**
+
+  |= Color |= Componente |
+  | <back:#E3F2FD>Azul</back> | Datos de entrada |
+  | <back:#F3E5F5>Morado</back> | Procesamiento temporal |
+  | <back:#E8F5E9>Verde</back> | Procesamiento espacial |
+  | <back:#FFE0B2>Naranja</back> | Fusión de modelos |
+  | <back:#FFEBEE>Rojo</back> | Resultados/Alertas |
+
+  **Stack:**
+  PyTorch, FastAPI, React
+end legend
+
+@enduml
