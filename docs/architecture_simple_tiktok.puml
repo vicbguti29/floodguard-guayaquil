@@ -1,0 +1,68 @@
+@startuml FloodGuard_TikTok_Visual
+
+skinparam backgroundColor #F8F9FA
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam defaultFontStyle bold
+
+title FloodGuard - Predicción de Inundaciones Guayaquil\n
+
+' Definir colores por componente
+skinparam rectangle {
+    BackgroundColor<<input>> #E3F2FD
+    BorderColor<<input>> #1976D2
+
+    BackgroundColor<<transformer>> #F3E5F5
+    BorderColor<<transformer>> #7B1FA2
+
+    BackgroundColor<<gnn>> #E8F5E9
+    BorderColor<<gnn>> #388E3C
+
+    BackgroundColor<<fusion>> #FFF3E0
+    BorderColor<<fusion>> #F57C00
+
+    BackgroundColor<<output>> #FFEBEE
+    BorderColor<<output>> #D32F2F
+}
+
+rectangle "**INPUT**\n\nPrecipitación\nÚltimas 24 horas\n\n(INAMHI/INOCAR)" as input <<input>> #E3F2FD
+
+rectangle "**TRANSFORMER**\n\nAnálisis Temporal\n¿Cuándo lloverá?\n\nAtención sobre\npatrones de lluvia" as transformer <<transformer>> #F3E5F5
+
+rectangle "**GRAPH NEURAL\nNETWORK**\n\nPropagación Espacial\n¿Dónde se inundará?\n\nFlujo de agua\nentre zonas" as gnn <<gnn>> #E8F5E9
+
+rectangle "**FUSIÓN**\n\nCombina Predicciones\n\nTemporal + Espacial" as fusion <<fusion>> #FFF3E0
+
+rectangle "**OUTPUT**\n\nAlertas por Zona\n2-6 horas antes\n\nNivel de riesgo\npor sector" as output <<output>> #FFEBEE
+
+' Flechas con labels
+input -down-> transformer : "Serie\ntemporal"
+input -down-> gnn : "Mapa de\nzonas"
+transformer -down-> fusion : "Predicción\nfutura"
+gnn -down-> fusion : "Propagación\nagua"
+fusion -down-> output : "Alertas"
+
+' Ejemplo de output
+note bottom of output
+  **Ejemplo de Predicción:**
+
+  • Los Sauces: **12%** (Bajo)
+  • Alborada: **45%** (Medio)
+  • Guasmo: **78%** (Alto) - 3.5h
+  • Bastión: **92%** (Crítico) - 2h
+end note
+
+' Leyenda con colores
+legend top left
+  **Componentes:**
+
+  |= Color |= Función |
+  | <back:#E3F2FD>Azul</back> | Entrada de datos |
+  | <back:#F3E5F5>Morado</back> | Procesamiento temporal |
+  | <back:#E8F5E9>Verde</back> | Procesamiento espacial |
+  | <back:#FFF3E0>Naranja</back> | Fusión de modelos |
+  | <back:#FFEBEE>Rojo</back> | Resultados/Alertas |
+end legend
+
+@enduml
