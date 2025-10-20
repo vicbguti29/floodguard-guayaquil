@@ -19,15 +19,18 @@ build/
 .env
 .env.local
 
-# Data
+# Data (NO subir a Git/Vercel - demasiado pesado)
 data/raw/*
 data/processed/*
+data/scripts/cache/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 *.csv
 *.parquet
 *.h5
 *.pkl
+*.gpkg
+*.json
 
 # Models
 models/**/*.pth
