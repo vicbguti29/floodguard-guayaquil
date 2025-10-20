@@ -1,0 +1,438 @@
+@startuml FloodGuard_Architecture_Complete
+
+!define RECTANGLE class
+
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+title FloodGuard - Arquitectura Completa Transformer + GNN\n(Predicción de Inundaciones Guayaquil)
+
+' ============================================
+' INPUTS
+' ============================================
+package "📊 DATOS DE ENTRADA" as inputs {
+    rectangle "Series Temporales\nMeteorológicas" as weather_data {
+        [Precipitación (mm/h)]
+        [Temperatura (°C)]
+        [Humedad (%)]
+        [Velocidad viento (km/h)]
+    }
+
+    rectangle "Datos Geoespaciales" as geo_data {
+        [Topografía (elevación)]
+        [Red de alcantarillado]
+        [Cuerpos de agua]
+        [Zonas de Guayaquil]
+    }
+
+    note right of weather_data
+        **Frecuencia:** Cada hora
+        **Ventana:** Últimas 24h
+        **Fuente:** INAMHI/INOCAR
+    end note
+
+    note right of geo_data
+        **Resolución:** Grid 2km x 2km
+        **Zonas:** 840 celdas
+        **Fuente:** OpenStreetMap
+    end note
+}
+
+' ============================================
+' TRANSFORMER TEMPORAL
+' ============================================
+package "🔄 TRANSFORMER TEMPORAL" as transformer {
+    rectangle "Input Embedding" as embed {
+        [Positional Encoding\n(Time-aware)]
+        [Feature Embedding\n4D → 128D]
+    }
+
+    rectangle "Multi-Head\nSelf-Attention" as attention {
+        [Query (Q)]
+        [Key (K)]
+        [Value (V)]
+        ---
+        [Attention(Q,K,V) = softmax(QK^T/√d)V]
+    }
+
+    rectangle "Feed-Forward\nNetwork" as ffn {
+        [Linear 128→512]
+        [ReLU]
+        [Linear 512→128]
+    }
+
+    rectangle "Transformer\nEncoder Stack" as encoder {
+        [Layer 1: Attention + FFN]
+        [Layer 2: Attention + FFN]
+        [...N capas...]
+    }
+
+    rectangle "Output Projection" as proj {
+        [Predicción próximas 6h]
+        [Por cada feature]
+    }
+
+    embed --> attention
+    attention --> ffn
+    ffn --> encoder
+    encoder --> proj
+
+    note right of attention
+        **Función de Atención:**
+        Captura dependencias temporales
+        en las series de lluvia
+
+        **Ventaja vs LSTM:**
+        Paralelizable, captura
+        relaciones de largo plazo
+    end note
+}
+
+' ============================================
+' GRAPH NEURAL NETWORK
+' ============================================
+package "🕸️ GRAPH NEURAL NETWORK (Espacial)" as gnn {
+    rectangle "Construcción\ndel Grafo" as graph_build {
+        [Nodos = Zonas de Guayaquil]
+        [Edges = Conexiones hidrológicas]
+        [Features = Topografía, predicción lluvia]
+    }
+
+    rectangle "Graph Convolution\nLayers (GCN)" as gcn {
+        [Agregación de vecinos]
+        [h_i^(l+1) = σ(Σ W·h_j^(l) / |N(i)|)]
+        [Propagación de información]
+    }
+
+    rectangle "Graph Attention\nNetwork (GAT)" as gat {
+        [Attention weights α_ij]
+        [h_i = σ(Σ α_ij·W·h_j)]
+        [Aprendizaje de importancia]
+    }
+
+    rectangle "Message Passing" as mp {
+        [3-5 capas de propagación]
+        [Información fluye entre zonas]
+        [Simula propagación de agua]
+    }
+
+    graph_build --> gcn
+    gcn --> gat
+    gat --> mp
+
+    note right of graph_build
+        **Conexiones:**
+        - Adyacencia geográfica
+        - Flujo de alcantarillado
+        - Pendiente topográfica
+        - Ríos y esteros
+    end note
+
+    note right of mp
+        **Message Passing:**
+        Zona A inundada →
+        propaga riesgo a zonas
+        conectadas aguas abajo
+    end note
+}
+
+' ============================================
+' FUSION LAYER
+' ============================================
+rectangle "⚡ FUSION LAYER\n(Atención Cruzada)" as fusion {
+    [Transformer Output (temporal)]
+    [GNN Output (espacial)]
+    ---
+    [Cross-Attention]
+    [Combina predicciones]
+    [temporales + espaciales]
+}
+
+' ============================================
+' OUTPUT
+' ============================================
+package "📍 PREDICCIONES POR ZONA" as outputs {
+    rectangle "Clasificación\nde Riesgo" as risk {
+        [Probabilidad de inundación]
+        [Nivel: Low/Medium/High/Critical]
+        [Tiempo estimado (2-6h)]
+        [Confianza del modelo]
+    }
+
+    rectangle "Output por Zona" as zone_output {
+        [Zona Z001: Los Sauces → 45% (Medium)]
+        [Zona Z002: Guasmo → 78% (High)]
+        [Zona Z003: Bastión → 15% (Low)]
+        [... 840 zonas]
+    }
+
+    risk --> zone_output
+}
+
+' ============================================
+' CONEXIONES PRINCIPALES
+' ============================================
+weather_data --> embed : "Últimas 24h\n(96 timesteps)"
+geo_data --> graph_build : "Grid espacial\n840 zonas"
+
+proj --> fusion : "Predicción\ntemporal"
+mp --> fusion : "Propagación\nespacial"
+
+fusion --> risk : "Predicción\nintegrada"
+
+' ============================================
+' LEYENDA
+' ============================================
+legend right
+    **Componentes Clave:**
+
+    |= Color |= Significado |
+    | <#LightBlue> | Input/Output |
+    | <#LightGreen> | Procesamiento Temporal |
+    | <#LightCoral> | Procesamiento Espacial |
+    | <#Gold> | Fusión |
+
+    **Flujo de Información:**
+    1. Series temporales → Transformer (atención temporal)
+    2. Datos geoespaciales → GNN (propagación espacial)
+    3. Fusión de ambos → Predicción final por zona
+
+    **Innovación:**
+    Combina lo mejor de ambos mundos:
+    - Transformer: Dependencias temporales complejas
+    - GNN: Relaciones espaciales y propagación
+end legend
+
+@enduml
+
+' ============================================
+' DIAGRAMA 2: MECANISMO DE ATENCIÓN DETALLADO
+' ============================================
+
+@startuml Transformer_Attention_Mechanism
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Mecanismo de Atención en Transformer\n(Para predicción de lluvia temporal)
+
+!define MATRIX rectangle
+
+package "Input: Serie Temporal 24h" as input {
+    MATRIX "X = [x₁, x₂, ..., x₂₄]" as X {
+        [t₁: 12mm, 25°C, 80%, 10km/h]
+        [t₂: 15mm, 24°C, 82%, 12km/h]
+        [...]
+        [t₂₄: 8mm, 26°C, 75%, 8km/h]
+    }
+}
+
+package "Linear Projections" as projections {
+    MATRIX "Query (Q)" as Q {
+        [Q = X · W_Q]
+        [Dimensión: 24 x 128]
+    }
+
+    MATRIX "Key (K)" as K {
+        [K = X · W_K]
+        [Dimensión: 24 x 128]
+    }
+
+    MATRIX "Value (V)" as V {
+        [V = X · W_V]
+        [Dimensión: 24 x 128]
+    }
+}
+
+MATRIX "Attention Scores" as scores {
+    [Score = Q · K^T / √d_k]
+    [Dimensión: 24 x 24]
+    ---
+    **Matriz de Atención:**
+    Qué tanto cada timestep
+    se relaciona con otros
+}
+
+MATRIX "Softmax" as softmax {
+    [Weights = softmax(Score)]
+    [Suma por fila = 1]
+    ---
+    **Normalización:**
+    Convierte scores a
+    probabilidades
+}
+
+MATRIX "Weighted Values" as weighted {
+    [Output = Weights · V]
+    [Dimensión: 24 x 128]
+    ---
+    **Combinación:**
+    Suma ponderada de valores
+    según importancia
+}
+
+X --> Q
+X --> K
+X --> V
+
+Q --> scores
+K --> scores
+scores --> softmax
+softmax --> weighted
+V --> weighted
+
+note right of scores
+    **Intuición:**
+    Si llueve mucho en t=10,
+    el modelo aprende a poner
+    atención en t=8, t=9
+    (horas previas relevantes)
+end note
+
+note right of weighted
+    **Output:**
+    Representación enriquecida
+    de cada timestep considerando
+    contexto temporal completo
+
+    **Ventaja:**
+    Captura patrones como:
+    "lluvia intensa seguida de
+    pico 2h después"
+end note
+
+@enduml
+
+' ============================================
+' DIAGRAMA 3: GNN MESSAGE PASSING
+' ============================================
+
+@startuml GNN_Message_Passing
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Graph Neural Network - Message Passing\n(Propagación espacial de inundación)
+
+!define NODE circle
+!define EDGE -->
+
+package "Grafo de Zonas Guayaquil" as graph {
+    NODE "Zona A\nGuasmo" as ZA {
+        **Features:**
+        Lluvia: 60mm
+        Elevación: 2m
+        Prob: 0.8
+    }
+
+    NODE "Zona B\nBastión" as ZB {
+        **Features:**
+        Lluvia: 45mm
+        Elevación: 5m
+        Prob: 0.4
+    }
+
+    NODE "Zona C\nSauces" as ZC {
+        **Features:**
+        Lluvia: 30mm
+        Elevación: 10m
+        Prob: 0.2
+    }
+
+    NODE "Zona D\nKennedy" as ZD {
+        **Features:**
+        Lluvia: 35mm
+        Elevación: 8m
+        Prob: 0.3
+    }
+}
+
+ZA EDGE ZB : "Conectadas\npor estero"
+ZA EDGE ZC : "Flujo\naguas abajo"
+ZB EDGE ZD : "Adyacentes"
+ZC EDGE ZD : "Red de\nalcantarillado"
+
+package "Message Passing (Iteración 1)" as mp1 {
+    rectangle "Agregación" as agg1 {
+        **Zona B recibe mensajes:**
+        - Zona A: h_A * w_AB
+        - (h_A = features de A)
+        - (w_AB = peso de conexión)
+
+        **Actualización:**
+        h_B' = σ(W · [h_B || Σ(mensajes)])
+    }
+}
+
+package "Resultado Final (3-5 iteraciones)" as result {
+    rectangle "Probabilidades Actualizadas" as probs {
+        [Zona A: 0.8 → 0.85] (alta, se mantiene)
+        [Zona B: 0.4 → 0.65] (↑ por vecindad con A)
+        [Zona C: 0.2 → 0.35] (↑ flujo desde A)
+        [Zona D: 0.3 → 0.45] (↑ vecindad con B)
+    }
+
+    note right of probs
+        **Efecto de Propagación:**
+
+        Zona A inundada (alta lluvia + baja elevación)
+        → propaga riesgo a zonas conectadas
+        → aunque tengan menos lluvia
+
+        **Realista:**
+        Modela cómo el agua fluye
+        de zonas altas a bajas,
+        y por red de alcantarillado
+    end note
+}
+
+graph --> mp1
+mp1 --> result
+
+legend right
+    **Tipos de Conexiones:**
+
+    |= Tipo |= Peso |
+    | Flujo gravitacional | Alto (pendiente) |
+    | Alcantarillado | Medio |
+    | Adyacencia simple | Bajo |
+
+    **Iteraciones:**
+    Más iteraciones = mayor
+    alcance de propagación
+
+    3-5 capas típicamente
+    suficientes para Guayaquil
+end legend
+
+@enduml
+
+@startuml FloodGuard_Simple_Flow
+
+skinparam backgroundColor #FEFEFE
+title FloodGuard - Flujo Simplificado (Para TikTok)
+
+rectangle "🌧️ INPUT\nPrecipitación\n24h pasadas" as input
+rectangle "🧠 TRANSFORMER\nAnálisis temporal\n¿Cuándo lloverá?" as transformer
+rectangle "🕸️ GNN\nPropagación espacial\n¿Dónde se inundará?" as gnn
+rectangle "⚡ FUSIÓN\nCombina predicciones" as fusion
+rectangle "📍 OUTPUT\nZonas en riesgo\n2-6h antes" as output
+
+input --> transformer : "Atención\ntemporal"
+transformer --> fusion : "Predicción\nfutura"
+input --> gnn : "Grafo\nespacial"
+gnn --> fusion : "Propagación\nagua"
+fusion --> output : "Alertas\npor zona"
+
+note bottom of output
+    **Ejemplo de Output:**
+
+    🟢 Los Sauces: Riesgo Bajo (12%)
+    🟡 Alborada: Riesgo Medio (45%)
+    🔴 Guasmo: Riesgo Alto (78%) - ⏰ 3.5h
+    🔴 Bastión: Riesgo Crítico (92%) - ⏰ 2h
+end note
+
+@enduml
