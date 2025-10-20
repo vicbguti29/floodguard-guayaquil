@@ -29,9 +29,34 @@ Registro de progreso real del proyecto (actualizado conforme avanzamos)
 - Repositorio GitHub público: https://github.com/vicbguti29/floodguard-guayaquil
 - Deploy automático con Vercel
 
+### ✅ Modelo LSTM + API Funcional - 2025-10-19 (Noche)
+
+**Logros Opción A - Enfoque Ágil:**
+
+1. **Modelo LSTM Baseline Entrenado**
+   - Arquitectura: 2 capas LSTM (64 hidden units) + FC layers
+   - Parámetros: 53,478 total
+   - Input: 24h de historia (precipitación, temp, humedad, viento)
+   - Output: Predicción próximas 6h
+   - Training: 20 epochs, val loss 0.0043
+   - Guardado en: `models/checkpoints/lstm_baseline_v1.pth`
+
+2. **API REST Completamente Funcional**
+   - FastAPI corriendo en localhost:8000
+   - Endpoint `/api/v1/predict` con predicciones reales
+   - Modelo carga automáticamente al startup
+   - 7 zonas monitoreadas (Los Sauces, Guasmo, Bastión Popular, etc.)
+   - Respuesta JSON con: risk_level, probability, estimated_time, confidence
+   - CORS habilitado para frontend
+
+3. **Testing Exitoso**
+   - curl localhost:8000/api/v1/predict ✓
+   - Predicciones dinámicas por zona ✓
+   - Niveles de riesgo: low, medium, high, critical ✓
+
 ### 🚧 En Progreso
-- Modelo LSTM baseline para predicciones
-- API REST funcional
+- Conectar frontend HTML con API backend
+- Deploy de API en Railway/Render (producción)
 
 ### 📋 Pendiente
 - Modelo LSTM baseline (iteración antes de Transformer)

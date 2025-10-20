@@ -300,16 +300,21 @@ MIT License - Uso libre con atribución
 **🚀 DEMO EN VIVO:** https://problem-cymhca3op-victors-projects-3d84c218.vercel.app
 
 ### ✅ Completado
-- [x] Estructura del proyecto y documentación
-- [x] Datos sintéticos generados (lluvia + eventos)
-- [x] Datos geoespaciales de Guayaquil (OpenStreetMap)
-- [x] Control de versiones Git + GitHub
+- [x] Estructura del proyecto y documentación completa
+- [x] Datos sintéticos generados (17.5K registros, 2 años)
+- [x] Datos geoespaciales de Guayaquil (OpenStreetMap - 840 zonas)
+- [x] Control de versiones Git + GitHub (público, MIT License)
 - [x] Landing page con mapa interactivo (MVP visual)
-- [x] Deploy en Vercel (URL pública funcionando)
+- [x] Deploy en Vercel (intentando fix)
+- [x] **Modelo LSTM baseline entrenado (53K parámetros)**
+- [x] **API REST funcional con predicciones en tiempo real**
+  - Endpoint `/api/v1/predict` - 7 zonas monitoreadas
+  - Modelo carga automáticamente al iniciar
+  - Probabilidades de riesgo por zona
 
 ### 🚧 En Progreso
-- [ ] Modelo LSTM baseline
-- [ ] API REST con predicciones
+- [ ] Conectar frontend con API backend
+- [ ] Deploy de API en producción (Railway/Render)
 
 ### 📋 Roadmap Corto Plazo
 1. **Hoy**: MVP deployado con mapa de zonas
