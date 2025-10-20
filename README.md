@@ -276,7 +276,7 @@ npm run dev
 
 ## 🤝 Contribuciones
 
-Este es un proyecto académico/investigación de ESPOL. Contactar a [tu correo] para colaboraciones.
+Contactar a vborborgutierrez@gmail.com para colaboraciones.
 
 ## 📄 Licencia
 
@@ -285,7 +285,6 @@ MIT License - Uso libre con atribución
 ## 🙏 Agradecimientos
 
 - INAMHI/INOCAR por datos meteorológicos públicos
-- ESPOL por apoyo institucional
 - Comunidad de Guayaquil por retroalimentación
 
 ---
