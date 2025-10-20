@@ -1,0 +1,186 @@
+@startuml FloodGuard_Architecture_Professional
+
+skinparam backgroundColor #F8F9FA
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam RoundCorner 10
+
+title **FloodGuard - Arquitectura Completa**\nSistema de Predicción de Inundaciones con Deep Learning\n
+
+' =====================================================
+' INPUTS
+' =====================================================
+rectangle "**DATOS DE ENTRADA**" as inputs #E3F2FD {
+    rectangle "Series Temporales\nMeteorológicas" as weather #BBDEFB {
+        - Precipitación (mm/h)
+        - Temperatura (°C)
+        - Humedad (%)
+        - Viento (km/h)
+    }
+
+    rectangle "Datos Geoespaciales" as geo #BBDEFB {
+        - Topografía
+        - Alcantarillado
+        - Ríos/Esteros
+        - Grid 840 zonas
+    }
+}
+
+note right of weather
+  **Ventana:** 24 horas
+  **Frecuencia:** Cada hora
+  **Fuente:** INAMHI/INOCAR
+end note
+
+' =====================================================
+' TRANSFORMER
+' =====================================================
+rectangle "**TRANSFORMER TEMPORAL**" as transformer_block #F3E5F5 {
+    rectangle "Input Embedding" as embed #E1BEE7 {
+        Posición Temporal
+        ====
+        Feature Embedding
+        4D → 128D
+    }
+
+    rectangle "Multi-Head\nSelf-Attention" as attention #E1BEE7 {
+        Query · Key · Value
+        ====
+        Attention Scores
+        ====
+        Weighted Sum
+    }
+
+    rectangle "Encoder Stack" as encoder #E1BEE7 {
+        N capas de
+        transformación
+        ====
+        Attention + FFN
+    }
+
+    rectangle "**Predicción\nTemporal**" as pred_temp #CE93D8 {
+        Output:
+        Próximas 6h
+    }
+}
+
+weather --> embed
+embed --> attention
+attention --> encoder
+encoder --> pred_temp
+
+note right of attention
+  **Función:**
+  Captura patrones
+  temporales en lluvia
+
+  **Ventaja:**
+  Relaciones de
+  largo plazo
+end note
+
+' =====================================================
+' GNN
+' =====================================================
+rectangle "**GRAPH NEURAL NETWORK**" as gnn_block #E8F5E9 {
+    rectangle "Grafo de Zonas" as graph #C8E6C9 {
+        Nodos = Zonas
+        ====
+        Edges = Conexiones
+        hidrológicas
+    }
+
+    rectangle "Graph Convolution" as gcn #C8E6C9 {
+        Agregación vecina
+        ====
+        h' = σ(Σ W·h_j)
+    }
+
+    rectangle "Message Passing" as mp #C8E6C9 {
+        Propagación
+        entre zonas
+        ====
+        3-5 iteraciones
+    }
+
+    rectangle "**Propagación\nEspacial**" as pred_space #A5D6A7 {
+        Output:
+        Riesgo por zona
+    }
+}
+
+geo --> graph
+graph --> gcn
+gcn --> mp
+mp --> pred_space
+
+note right of mp
+  **Simula:**
+  Flujo de agua
+  entre zonas
+
+  **Considera:**
+  - Gravedad
+  - Alcantarillado
+  - Topografía
+end note
+
+' =====================================================
+' FUSION
+' =====================================================
+rectangle "**FUSION LAYER**" as fusion #FFE0B2 {
+    Atención Cruzada
+    ====
+    Combina:
+    Temporal + Espacial
+}
+
+pred_temp --> fusion : "Cuándo"
+pred_space --> fusion : "Dónde"
+
+' =====================================================
+' OUTPUT
+' =====================================================
+rectangle "**PREDICCIONES FINALES**" as outputs #FFEBEE {
+    rectangle "Clasificación" as classify #FFCDD2 {
+        - Probabilidad
+        - Nivel de Riesgo
+        - Tiempo Estimado
+        - Confianza
+    }
+
+    rectangle "Output por Zona" as zones #FFCDD2 {
+        Z001: Los Sauces
+        **45%** (Medium) - 3.5h
+        ====
+        Z002: Guasmo
+        **78%** (High) - 2h
+        ====
+        Z003: Bastión
+        **92%** (Critical) - 1.5h
+    }
+}
+
+fusion --> classify
+classify --> zones
+
+' =====================================================
+' LEYENDA
+' =====================================================
+legend bottom right
+    **Stack Tecnológico:**
+
+    |= Componente |= Tech |
+    | Transformer | PyTorch |
+    | GNN | PyTorch Geometric |
+    | API | FastAPI |
+    | Frontend | React + Leaflet |
+
+    **Innovación:**
+    Primera aplicación de
+    Transformer + GNN para
+    inundaciones en Ecuador
+end legend
+
+@enduml
