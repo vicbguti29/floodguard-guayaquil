@@ -18,9 +18,20 @@ Registro de progreso real del proyecto (actualizado conforme avanzamos)
   - Cuerpos de agua (ríos, esteros)
 - Control de versiones Git inicializado
 
+### ✅ MVP Deployado - 2025-10-19
+- **URL en vivo:** https://problem-cymhca3op-victors-projects-3d84c218.vercel.app
+- Landing page funcional con:
+  - Mapa interactivo de Guayaquil (Leaflet + OpenStreetMap)
+  - 7 zonas mostradas con niveles de riesgo
+  - Estadísticas reales del problema (73 eventos, $127M pérdidas, 45K afectados/año)
+  - Justificación transparente de datos sintéticos
+  - Disclaimer claro sobre versión Beta
+- Repositorio GitHub público: https://github.com/vicbguti29/floodguard-guayaquil
+- Deploy automático con Vercel
+
 ### 🚧 En Progreso
-- MVP deployable (landing page + mapa interactivo)
-- Deploy en Vercel para URL pública
+- Modelo LSTM baseline para predicciones
+- API REST funcional
 
 ### 📋 Pendiente
 - Modelo LSTM baseline (iteración antes de Transformer)

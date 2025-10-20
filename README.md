@@ -295,18 +295,21 @@ MIT License - Uso libre con atribución
 
 ## 📝 Estado Actual del Proyecto
 
-**Versión:** Pre-MVP (En Desarrollo Activo)
+**Versión:** MVP v0.1 (Deployado)
 **Última actualización:** 2025-10-19
+**🚀 DEMO EN VIVO:** https://problem-cymhca3op-victors-projects-3d84c218.vercel.app
 
 ### ✅ Completado
 - [x] Estructura del proyecto y documentación
 - [x] Datos sintéticos generados (lluvia + eventos)
 - [x] Datos geoespaciales de Guayaquil (OpenStreetMap)
-- [x] Control de versiones Git
+- [x] Control de versiones Git + GitHub
+- [x] Landing page con mapa interactivo (MVP visual)
+- [x] Deploy en Vercel (URL pública funcionando)
 
 ### 🚧 En Progreso
-- [ ] Landing page con mapa interactivo (MVP visual)
-- [ ] Deploy en Vercel (URL pública)
+- [ ] Modelo LSTM baseline
+- [ ] API REST con predicciones
 
 ### 📋 Roadmap Corto Plazo
 1. **Hoy**: MVP deployado con mapa de zonas
