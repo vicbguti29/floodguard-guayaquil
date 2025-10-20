@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FloodGuard - Sistema de Alerta de Inundaciones Guayaquil</title>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * {
             margin: 0;
@@ -260,27 +260,23 @@
     </div>
 
     <script>
-        // Token de Mapbox (usar el tuyo en producción)
-        // Este es público para demo, reemplazar con variable de entorno
-        mapboxgl.accessToken = 'pk.eyJ1IjoiZmxvb2RndWFyZCIsImEiOiJjbTB4eXoxeHkwMDAwMmtzMWZmNXkzOWNwIn0.demo_token_replace_me';
+        // Inicializar mapa con Leaflet (open source, sin token necesario)
+        const map = L.map('map').setView([-2.1709, -79.9224], 11);
 
-        // Inicializar mapa centrado en Guayaquil
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/light-v11',
-            center: [-79.9224, -2.1709], // Guayaquil
-            zoom: 11
-        });
+        // Tile layer de OpenStreetMap (gratis, sin límites)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
         // Datos de ejemplo de zonas con diferentes niveles de riesgo
         const mockZones = [
-            { name: 'Guasmo', coords: [-79.897, -2.238], risk: 'high' },
-            { name: 'Bastión Popular', coords: [-79.959, -2.092], risk: 'high' },
-            { name: 'Monte Sinaí', coords: [-79.989, -2.074], risk: 'medium' },
-            { name: 'Los Sauces', coords: [-79.921, -2.124], risk: 'high' },
-            { name: 'Kennedy', coords: [-79.904, -2.166], risk: 'low' },
-            { name: 'Urdesa', coords: [-79.910, -2.179], risk: 'low' },
-            { name: 'Alborada', coords: [-79.956, -2.124], risk: 'medium' }
+            { name: 'Guasmo', coords: [-2.238, -79.897], risk: 'high' },
+            { name: 'Bastión Popular', coords: [-2.092, -79.959], risk: 'high' },
+            { name: 'Monte Sinaí', coords: [-2.074, -79.989], risk: 'medium' },
+            { name: 'Los Sauces', coords: [-2.124, -79.921], risk: 'high' },
+            { name: 'Kennedy', coords: [-2.166, -79.904], risk: 'low' },
+            { name: 'Urdesa', coords: [-2.179, -79.910], risk: 'low' },
+            { name: 'Alborada', coords: [-2.124, -79.956], risk: 'medium' }
         ];
 
         const riskColors = {
@@ -291,29 +287,20 @@
         };
 
         // Agregar marcadores al mapa
-        map.on('load', function() {
-            mockZones.forEach(zone => {
-                const el = document.createElement('div');
-                el.style.backgroundColor = riskColors[zone.risk];
-                el.style.width = '30px';
-                el.style.height = '30px';
-                el.style.borderRadius = '50%';
-                el.style.border = '3px solid white';
-                el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-                el.style.cursor = 'pointer';
-
-                const popup = new mapboxgl.Popup({ offset: 25 })
-                    .setHTML(`
-                        <strong>${zone.name}</strong><br>
-                        Riesgo: <span style="color: ${riskColors[zone.risk]}">${zone.risk.toUpperCase()}</span><br>
-                        <small>Última actualización: Hace 30 min</small>
-                    `);
-
-                new mapboxgl.Marker(el)
-                    .setLngLat(zone.coords)
-                    .setPopup(popup)
-                    .addTo(map);
+        mockZones.forEach(zone => {
+            const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${riskColors[zone.risk]}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [30, 30]
             });
+
+            L.marker(zone.coords, { icon: icon })
+                .addTo(map)
+                .bindPopup(`
+                    <strong>${zone.name}</strong><br>
+                    Riesgo: <span style="color: ${riskColors[zone.risk]}">${zone.risk.toUpperCase()}</span><br>
+                    <small>Última actualización: Hace 30 min</small>
+                `);
         });
 
         // Simulación de actualización de tiempo
